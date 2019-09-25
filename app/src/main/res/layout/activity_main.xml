@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+<!--    <com.appodeal.ads.BannerView-->
+<!--        android:id="@+id/appodealBannerView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:visibility="gone"-->
+<!--        tools:layout_editor_absoluteX="205dp"-->
+<!--        tools:layout_editor_absoluteY="364dp" />-->
+
+<!--    <ScrollView-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/btnNative"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/btnNative"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/btnNative">-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/nativeAdsListView"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="30dp"-->
+<!--            android:orientation="vertical" >-->
+
+<!--        </LinearLayout>-->
+<!--    </ScrollView>-->
+
+<!--    <Button-->
+<!--        android:id="@+id/btnBanners"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:onClick="OnBtnBannersClick"-->
+<!--        android:text="Banners"-->
+<!--        tools:layout_editor_absoluteX="161dp"-->
+<!--        tools:layout_editor_absoluteY="130dp" />-->
+
+<!--    <Button-->
+<!--        android:id="@+id/btnInterstitials"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="30dp"-->
+<!--        android:enabled="false"-->
+<!--        android:onClick="onBtnInterstitialsClick"-->
+<!--        android:text="Interstitials"-->
+<!--        android:visibility="visible"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/btnBanners"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/btnBanners"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/btnBanners" />-->
+
+<!--    <Button-->
+<!--        android:id="@+id/btnRVideo"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="30dp"-->
+<!--        android:enabled="false"-->
+<!--        android:onClick="onBtnRVideoClick"-->
+<!--        android:text="Rewarded video"-->
+<!--        android:visibility="visible"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/btnInterstitials"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/btnInterstitials"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/btnInterstitials" />-->
+
+<!--    <Button-->
+<!--        android:id="@+id/btnNative"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="30dp"-->
+<!--        android:onClick="onBtbNativeClick"-->
+<!--        android:text="Native"-->
+<!--        android:visibility="gone"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/btnRVideo"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/btnRVideo"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/btnRVideo" />-->
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="122dp"
+        tools:layout_editor_absoluteY="231dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <com.appodeal.ads.BannerView
+                android:id="@+id/appodealBannerView"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:visibility="invisible"
+                tools:layout_editor_absoluteX="205dp"
+                tools:layout_editor_absoluteY="364dp" />
+
+            <Button
+                android:id="@+id/btnBanners"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="OnBtnBannersClick"
+                android:text="Banners" />
+
+            <Button
+                android:id="@+id/btnInterstitials"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:onClick="onBtnInterstitialsClick"
+                android:text="Interstitials"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/btnRVideo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:onClick="onBtnRVideoClick"
+                android:text="Rewarded video"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/btnNative"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onBtbNativeClick"
+                android:text="Native"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/nativeAdsListView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
