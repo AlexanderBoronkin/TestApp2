@@ -8,7 +8,6 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -19,7 +18,6 @@ import com.appodeal.ads.BannerCallbacks;
 import com.appodeal.ads.InterstitialCallbacks;
 import com.appodeal.ads.NativeAdView;
 import com.appodeal.ads.RewardedVideoCallbacks;
-import com.appodeal.ads.Native;
 import com.appodeal.ads.NativeAd;
 import com.appodeal.ads.NativeCallbacks;
 import com.appodeal.ads.native_ad.views.NativeAdViewAppWall;
@@ -36,9 +34,9 @@ public class MainActivity extends AppCompatActivity {
     boolean bannerShown = false;
     boolean NativeShown = false;
     String mPlacementName = "default";
+    String RVideoPlacement = "forRVideo";
     List<NativeAd> nativeAds = new ArrayList<>();
     LinearLayout nativeAdsListView;
-    long current;
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
@@ -46,14 +44,9 @@ public class MainActivity extends AppCompatActivity {
         outState.putInt("countOfShownRVideos",countOfShownRVideos);
         outState.putBoolean("bannerShown",bannerShown);
         outState.putBoolean("NativeShown",NativeShown);
-        outState.putLong("current",current);
 
         Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
-        outState.putBoolean("RVideoEnabled",btnRVideo.isEnabled());
-        Button btnInterstitials = (Button) findViewById(R.id.btnInterstitials);
-        outState.putBoolean("InterstitialsEnabled",btnInterstitials.isEnabled());
-        Button btnNative = (Button) findViewById(R.id.btnNative);
-        outState.putInt("NativeVisible", btnNative.getVisibility());
+        outState.putBoolean("RVideoEnabled", btnRVideo.isEnabled());
         super.onSaveInstanceState(outState);
     }
 
@@ -68,36 +61,23 @@ public class MainActivity extends AppCompatActivity {
             countOfShownRVideos = savedInstanceState.getInt("countOfShownRVideos", 0);
             bannerShown = savedInstanceState.getBoolean("bannerShown", false);
             NativeShown = savedInstanceState.getBoolean("NativeShown", false);
-            current = savedInstanceState.getLong("current",0);
-
-            if(current != 0 && countOfShownRVideos < 3) {
-                CountDownTimer countTimer = new CountDownTimer(current,1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                        current = millisUntilFinished;
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        Button btnRVideo = (Button)findViewById(R.id.btnRVideo);
-                        btnRVideo.setEnabled(true);
-                    }
-                }.start();
-            }
-            if(bannerShown) {
-                Appodeal.show(this, Appodeal.BANNER_TOP);
-            }
 
             Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
             btnRVideo.setEnabled(savedInstanceState.getBoolean("RVideoEnabled", false));
 
-            Button btnInterstitials = (Button) findViewById(R.id.btnInterstitials);
-            btnInterstitials.setEnabled(savedInstanceState.getBoolean("InterstitialsEnabled", false));
-
-            Button btnNative = (Button) findViewById(R.id.btnNative);
-            btnNative.setVisibility(savedInstanceState.getInt("NativeVisible", 0));
-            if(NativeShown) {
-                btnNative.performClick();
+            if(bannerShown) {
+                Appodeal.show(this, Appodeal.BANNER_TOP);
+            }
+            if(countOfShownBanners >= 7){
+                Button btnInterstitials = (Button) findViewById(R.id.btnInterstitials);
+                btnInterstitials.setEnabled(true);
+            }
+            if(countOfShownRVideos >= 3){
+                Button btnNative = (Button) findViewById(R.id.btnNative);
+                btnNative.setVisibility(View.VISIBLE);
+                if(NativeShown) {
+                    btnNative.performClick();
+                }
             }
         }
 
@@ -105,30 +85,27 @@ public class MainActivity extends AppCompatActivity {
                 (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
                 checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED))
         {
-            Appodeal.requestAndroidMPermissions((Activity) this, new PermissionsHelper.AppodealPermissionCallbacks(){
+            Appodeal.requestAndroidMPermissions(this, new PermissionsHelper.AppodealPermissionCallbacks(){
                 @Override
                 public void writeExternalStorageResponse(int result) {
                     if (result == PackageManager.PERMISSION_GRANTED) {
-                        Utils.showToast((Activity) MainActivity.this, "WRITE_EXTERNAL_STORAGE permission was granted");
+                        Utils.showToast( MainActivity.this, "WRITE_EXTERNAL_STORAGE permission was granted");
                     } else {
-                        Utils.showToast((Activity) MainActivity.this, "WRITE_EXTERNAL_STORAGE permission was NOT granted");
+                        Utils.showToast( MainActivity.this, "WRITE_EXTERNAL_STORAGE permission was NOT granted");
                     }
                 }
-
                 @Override
                 public void accessCoarseLocationResponse(int result) {
                     if (result == PackageManager.PERMISSION_GRANTED) {
-                        Utils.showToast((Activity) MainActivity.this, "ACCESS_COARSE_LOCATION permission was granted");
+                        Utils.showToast(MainActivity.this, "ACCESS_COARSE_LOCATION permission was granted");
                     } else {
-                        Utils.showToast((Activity) MainActivity.this, "ACCESS_COARSE_LOCATION permission was NOT granted");
+                        Utils.showToast(MainActivity.this, "ACCESS_COARSE_LOCATION permission was NOT granted");
                     }
                 }
             });
-
         }
 
         Appodeal.setTesting(true);
-        Appodeal.setRequiredNativeMediaAssetType(Native.MediaAssetType.ICON);
 
         Appodeal.initialize(this, "0dbcc75e03399c1d008ee29c0cd4cad758b053e2d18ed559",
                 Appodeal.INTERSTITIAL |
@@ -142,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
                 if(countOfShownRVideos < 3) {
                     Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
                     btnRVideo.setEnabled(true);
-
                 }
             }
             @Override
@@ -152,7 +128,13 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onRewardedVideoShown() {
-                // Вызывается после показа видео с наградой за просмотр
+                countOfShownRVideos++;
+                if(countOfShownRVideos >= 3) {
+                    Button btnNative = (Button) findViewById(R.id.btnNative);
+                    btnNative.setVisibility(View.VISIBLE);
+                }
+                Button btnRVideo = (Button)findViewById(R.id.btnRVideo);
+                btnRVideo.setEnabled(false);
             }
             @Override
             public void onRewardedVideoClicked() {
@@ -160,39 +142,17 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onRewardedVideoFinished(double amount, String name) {
-                // Вызывается, если видео с наградой за просмотр просмотрено полностью
+
             }
             @Override
             public void onRewardedVideoClosed(boolean finished) {
                 if(bannerShown) {
                     Appodeal.show(MainActivity.this, Appodeal.BANNER_TOP);
                 }
-                countOfShownRVideos++;
-                if(countOfShownRVideos >= 3) {
-                    Button btnNative = (Button)findViewById(R.id.btnNative);
-                    btnNative.setVisibility(View.VISIBLE);
-                    Button btnRVideo = (Button)findViewById(R.id.btnRVideo);
-                    btnRVideo.setEnabled(false);
-                    return;
-                }
-                Button btnRVideo = (Button)findViewById(R.id.btnRVideo);
-                btnRVideo.setEnabled(false);
-                CountDownTimer countTimer = new CountDownTimer(60000,1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                        current = millisUntilFinished;
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        Button btnRVideo = (Button)findViewById(R.id.btnRVideo);
-                        btnRVideo.setEnabled(true);
-                    }
-                }.start();
             }
             @Override
             public void onRewardedVideoExpired() {
-                // Вызывается, когда видео с наградой за просмотр больше не доступно
+               // Вызывается, когда видео с наградой за просмотр больше не доступно
             }
         });
 
@@ -204,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onNativeFailedToLoad() {
-
+                //Toast.makeText(MainActivity.this, "onNativeFailedToLoad", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -234,18 +194,18 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onInterstitialFailedToLoad() {
-                Button btnInterstitials = (Button)findViewById(R.id.btnInterstitials);
-                btnInterstitials.setEnabled(false);
+                //Toast.makeText(MainActivity.this, "onInterstitialFailedToLoad", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onInterstitialShown() {
-
+                Button btnInterstitials = (Button) findViewById(R.id.btnInterstitials);
+                btnInterstitials.setEnabled(false);
             }
 
             @Override
             public void onInterstitialClicked() {
-
+                //Toast.makeText(MainActivity.this, "onInterstitialClicked", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -257,19 +217,19 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onInterstitialExpired() {
-
+                //Toast.makeText(MainActivity.this, "onInterstitialExpired", Toast.LENGTH_SHORT).show();
             }
         });
 
         Appodeal.setBannerCallbacks(new BannerCallbacks() {
             @Override
             public void onBannerLoaded(int i, boolean b) {
-
+                //Toast.makeText(MainActivity.this, "onBannerLoaded", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onBannerFailedToLoad() {
-
+                //Toast.makeText(MainActivity.this, "onBannerFailedToLoad", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -287,18 +247,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onBannerClicked() {
-
+                //Toast.makeText(MainActivity.this, "onBannerClicked", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onBannerExpired() {
-
+                //Toast.makeText(MainActivity.this, "onBannerExpired", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     public void OnBtnBannersClick(View v) {
-        Appodeal.setBannerViewId(R.id.appodealBannerView);
         if (Appodeal.isLoaded(Appodeal.BANNER_TOP)) {
             if(NativeShown){
                 hideNative();
@@ -329,18 +288,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onBtnRVideoClick(View v){
-        if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)) {
+        if (Appodeal.canShow(Appodeal.REWARDED_VIDEO, RVideoPlacement)) {
             if(bannerShown) {
                 Appodeal.hide(this, Appodeal.BANNER_TOP);
             }
-            Appodeal.show(this, Appodeal.REWARDED_VIDEO);
+            Appodeal.show(this, Appodeal.REWARDED_VIDEO, RVideoPlacement);
         }
         else {
             Toast.makeText(this,
-                    "Rewarded video not dowlnoaded",
+                    "Can't show rewarded video",
                     Toast.LENGTH_SHORT).show();
         }
-
     }
 
     public void onBtbNativeClick(View v){
@@ -358,8 +316,8 @@ public class MainActivity extends AppCompatActivity {
                 nativeAdsListView.addView(nativeAdView);
             }
         }
-
     }
+
     private void hideNative(){
         LinearLayout nativeListView = findViewById(R.id.nativeAdsListView);
         int childCount = nativeListView.getChildCount();
