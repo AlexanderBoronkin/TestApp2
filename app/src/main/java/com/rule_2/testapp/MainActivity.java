@@ -42,11 +42,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putInt("countOfShownBanners",countOfShownBanners);
         outState.putInt("countOfShownRVideos",countOfShownRVideos);
+
+        //сохраняя данные значения, при повороте экрана можно сразу запускать показ той рекламы,
+        // которая была показана до поворота
         outState.putBoolean("bannerShown",bannerShown);
         outState.putBoolean("NativeShown",NativeShown);
 
+        //статус видимости/активности других кнопок можно рассчитать по
+        // переменным, которые сохранены выше, а этой - нет
         Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
         outState.putBoolean("RVideoEnabled", btnRVideo.isEnabled());
+
         super.onSaveInstanceState(outState);
     }
 
@@ -113,6 +119,13 @@ public class MainActivity extends AppCompatActivity {
                         Appodeal.NATIVE |
                         Appodeal.BANNER);
 
+        //из-за того, что теперь при показе видео кнопка становится неактивной, а при загрузке -
+        //активной, если видео было загружено в момент показа рекламы, кнопка будет активной.
+        //т.е. благодаря плейсменту рекламу будет показать нельзя, а кнопку нажать - можно.
+        //в предыдущих версиях благодаря таймеру я держал эту кнопку неактивной в течение минуты,
+        // что позволяло исключить нажатия кнопки, когда рекламу показать ещё нельзя,
+        // но по требованию таймер был убран. Если пользователь нажмет кнопку, а минута ещё не
+        // прошла, просто выведем ему информацию о том, когда стоит её пытать нажать ещё раз
         Appodeal.setRewardedVideoCallbacks(new RewardedVideoCallbacks() {
             @Override
             public void onRewardedVideoLoaded(boolean isPrecache) {
@@ -128,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onRewardedVideoShown() {
+                //сразу после показа видео кнопка становится неактивной
                 countOfShownRVideos++;
                 if(countOfShownRVideos >= 3) {
                     Button btnNative = (Button) findViewById(R.id.btnNative);
@@ -268,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             Toast.makeText(this,
-                    "Banner not downloaded",
+                    "Can't show banner. Banner not downloaded.",
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -282,7 +296,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             Toast.makeText(this,
-                    "Interstitial not downloaded",
+                    "Can't show interstitial. Interstitial not downloaded",
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -295,8 +309,9 @@ public class MainActivity extends AppCompatActivity {
             Appodeal.show(this, Appodeal.REWARDED_VIDEO, RVideoPlacement);
         }
         else {
+            //исполнится только в том случае, если видео загружено, но показать нельзя
             Toast.makeText(this,
-                    "Can't show rewarded video",
+                    "Rewarded video can be shown no more than once per minute. Try again later",
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -315,6 +330,11 @@ public class MainActivity extends AppCompatActivity {
                 NativeAdView nativeAdView = new NativeAdViewAppWall(nativeAdsListView.getContext(), nativeAd, ((MainActivity) nativeAdsListView.getContext()).mPlacementName);
                 nativeAdsListView.addView(nativeAdView);
             }
+        }
+        else {
+            Toast.makeText(this,
+                    "Can't show native. Native not downloaded.",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
