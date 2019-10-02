@@ -8,9 +8,11 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.appodeal.ads.Appodeal;
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     int countOfShownRVideos = 0;
     boolean bannerShown = false;
     boolean NativeShown = false;
+    int timeToRVideo = 0;
     String mPlacementName = "default";
     String RVideoPlacement = "forRVideo";
     List<NativeAd> nativeAds = new ArrayList<>();
@@ -42,16 +45,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putInt("countOfShownBanners",countOfShownBanners);
         outState.putInt("countOfShownRVideos",countOfShownRVideos);
+        outState.putInt("timeToRVideo",timeToRVideo);
 
-        //сохраняя данные значения, при повороте экрана можно сразу запускать показ той рекламы,
-        // которая была показана до поворота
+    //сохраняя данные значения, при повороте экрана можно сразу запускать показ той рекламы,
+    // которая была показана до поворота
         outState.putBoolean("bannerShown",bannerShown);
         outState.putBoolean("NativeShown",NativeShown);
-
-        //статус видимости/активности других кнопок можно рассчитать по
-        // переменным, которые сохранены выше, а этой - нет
-        Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
-        outState.putBoolean("RVideoEnabled", btnRVideo.isEnabled());
 
         super.onSaveInstanceState(outState);
     }
@@ -65,11 +64,10 @@ public class MainActivity extends AppCompatActivity {
         if(savedInstanceState != null){
             countOfShownBanners = savedInstanceState.getInt("countOfShownBanners", 0);
             countOfShownRVideos = savedInstanceState.getInt("countOfShownRVideos", 0);
+            timeToRVideo = savedInstanceState.getInt("timeToRVideo", 0);
+
             bannerShown = savedInstanceState.getBoolean("bannerShown", false);
             NativeShown = savedInstanceState.getBoolean("NativeShown", false);
-
-            Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
-            btnRVideo.setEnabled(savedInstanceState.getBoolean("RVideoEnabled", false));
 
             if(bannerShown) {
                 Appodeal.show(this, Appodeal.BANNER_TOP);
@@ -78,6 +76,34 @@ public class MainActivity extends AppCompatActivity {
                 Button btnInterstitials = (Button) findViewById(R.id.btnInterstitials);
                 btnInterstitials.setEnabled(true);
             }
+            if(countOfShownRVideos < 3) {
+                if(timeToRVideo != 0) {
+                    TextView textTime = (TextView) findViewById(R.id.textTime);
+                    textTime.setVisibility(View.VISIBLE);
+
+                    CountDownTimer timer = new CountDownTimer(timeToRVideo * 1000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            timeToRVideo = (int) millisUntilFinished / 1000;
+                            TextView textTime = (TextView) findViewById(R.id.textTime);
+                            textTime.setText("Time to rewarded video " + (millisUntilFinished / 1000 + 1) + " sec.");
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
+                            btnRVideo.setEnabled(true);
+                            TextView textTime = (TextView) findViewById(R.id.textTime);
+                            textTime.setVisibility(View.GONE);
+                            timeToRVideo = 0;
+                        }
+                    }.start();
+                }
+                else{
+                    Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
+                    btnRVideo.setEnabled(true);
+                }
+            }
             if(countOfShownRVideos >= 3){
                 Button btnNative = (Button) findViewById(R.id.btnNative);
                 btnNative.setVisibility(View.VISIBLE);
@@ -85,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
                     btnNative.performClick();
                 }
             }
+
         }
 
         if (Build.VERSION.SDK_INT >= 23 &&
@@ -119,20 +146,11 @@ public class MainActivity extends AppCompatActivity {
                         Appodeal.NATIVE |
                         Appodeal.BANNER);
 
-        //из-за того, что теперь при показе видео кнопка становится неактивной, а при загрузке -
-        //активной, если видео было загружено в момент показа рекламы, кнопка будет активной.
-        //т.е. благодаря плейсменту рекламу будет показать нельзя, а кнопку нажать - можно.
-        //в предыдущих версиях благодаря таймеру я держал эту кнопку неактивной в течение минуты,
-        // что позволяло исключить нажатия кнопки, когда рекламу показать ещё нельзя,
-        // но по требованию таймер был убран. Если пользователь нажмет кнопку, а минута ещё не
-        // прошла, просто выведем ему информацию о том, когда стоит её пытать нажать ещё раз
         Appodeal.setRewardedVideoCallbacks(new RewardedVideoCallbacks() {
             @Override
             public void onRewardedVideoLoaded(boolean isPrecache) {
-                if(countOfShownRVideos < 3) {
                     Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
-                    btnRVideo.setEnabled(true);
-                }
+                    btnRVideo.setEnabled(Appodeal.canShow(Appodeal.REWARDED_VIDEO,RVideoPlacement));
             }
             @Override
             public void onRewardedVideoFailedToLoad() {
@@ -141,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onRewardedVideoShown() {
-                //сразу после показа видео кнопка становится неактивной
+            //сразу после показа видео кнопка становится неактивной
                 countOfShownRVideos++;
                 if(countOfShownRVideos >= 3) {
                     Button btnNative = (Button) findViewById(R.id.btnNative);
@@ -149,6 +167,33 @@ public class MainActivity extends AppCompatActivity {
                 }
                 Button btnRVideo = (Button)findViewById(R.id.btnRVideo);
                 btnRVideo.setEnabled(false);
+
+                if(countOfShownRVideos < 3 ) {
+                    TextView textTime = (TextView) findViewById(R.id.textTime);
+                    textTime.setVisibility(View.VISIBLE);
+
+                //таймер нужен для управления активностью кнопки в течение того времени, когда
+                // видео загружено, но показывать его ещё нельзя, т.к. должен быть интервал минуту
+                    CountDownTimer timer = new CountDownTimer(60000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            timeToRVideo = (int) millisUntilFinished / 1000;
+                            TextView textTime = (TextView) findViewById(R.id.textTime);
+                            textTime.setText("Time to rewarded video " + (millisUntilFinished/1000 + 1)+ " sec.");
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            if(Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)){
+                                Button btnRVideo = (Button) findViewById(R.id.btnRVideo);
+                                btnRVideo.setEnabled(true);
+                            }
+                            TextView textTime = (TextView) findViewById(R.id.textTime);
+                            textTime.setVisibility(View.GONE);
+                            timeToRVideo = 0;
+                        }
+                    }.start();
+                }
             }
             @Override
             public void onRewardedVideoClicked() {
@@ -302,16 +347,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onBtnRVideoClick(View v){
-        if (Appodeal.canShow(Appodeal.REWARDED_VIDEO, RVideoPlacement)) {
+        if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)) {
             if(bannerShown) {
                 Appodeal.hide(this, Appodeal.BANNER_TOP);
             }
             Appodeal.show(this, Appodeal.REWARDED_VIDEO, RVideoPlacement);
         }
         else {
-            //исполнится только в том случае, если видео загружено, но показать нельзя
             Toast.makeText(this,
-                    "Rewarded video can be shown no more than once per minute. Try again later",
+                    "Can't show Rewarded video. Rewarded video not downloaded",
                     Toast.LENGTH_SHORT).show();
         }
     }
